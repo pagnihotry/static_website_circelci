@@ -1,0 +1,28 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # docker image with go, hugo and gcloud installed
+      - image: pagnihotry/go1.9.4-alpine3.7-hugo:1.0.3
+        environment:
+          # environment variable - google project id
+          GCLOUD_PROJECT: "<google cloud project id>"
+    steps:
+      # check out the code
+      - checkout
+      # extract the service account json
+      # service account jsno is stored as base 64 encoded string in CircleCI
+      # DO NOT COMMIT IT AS A PLAIN TEXT ENVIRONMENT VARIABLE FOR SECURITY REASONS
+      - run: echo $GCLOUD_SERVICE_KEY | base64 -d > ${HOME}/gcloud-service-key.json
+      # initialize gcloud
+      - run: |
+          gcloud --quiet components update app
+          gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+          gcloud config set project $GCLOUD_PROJECT
+      # checkout submodules for themese and generate static blog
+      - run: |
+          git submodule update --init
+          cd hugo_blog
+          hugo
+      # copy generated files to bucket, zipped and public
+      - run: gsutil -m cp -z html -a public-read -r hugo_blog/public/* gs://<google cloud bucket name>/
