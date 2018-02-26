@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       # docker image with go, hugo and gcloud installed
-      - image: pagnihotry/go1.9.4-alpine3.7-hugo:1.0.3
+      - image: pagnihotry/hugo0.36.1-alpine-3.7-gcloud
         environment:
           # environment variable - google project id
           GCLOUD_PROJECT: "<google cloud project id>"
